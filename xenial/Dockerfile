@@ -1,4 +1,4 @@
-ARG ARCH=amd64
+ARG ARCH
 FROM ilmco/${ARCH}-ubuntu:16.04 as builder
 
 ARG ARCH

@@ -1,3 +1,3 @@
 #!/bin/bash
-echo docker build --build-arg ARCH=$(sed -e 's/.*-\(.*\)$/\1/' <<< $IMAGE_NAME) \
+docker build --build-arg ARCH=$(sed -e 's/.*-\(.*\)$/\1/' <<< $IMAGE_NAME) \
   -t ${IMAGE_NAME} .
