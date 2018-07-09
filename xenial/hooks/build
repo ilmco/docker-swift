@@ -1,3 +1,4 @@
 #!/bin/bash
+docker run --rm --privileged multiarch/qemu-user-static:register
 docker build --build-arg ARCH=$(sed -e 's/.*-\(.*\)$/\1/' <<< $IMAGE_NAME) \
   -t ${IMAGE_NAME} .
