@@ -1,6 +1,5 @@
 ARG ARCH
 ARG CLANG_VERSION=6.0
-ARG LLDB_VERSION=6.0
 ARG SWIFT_VERSION=4.1.2
 ARG SWIFT_BRANCH=RELEASE
 ARG BUILD_NUMBER=0
@@ -8,14 +7,12 @@ ARG BUILD_NUMBER=0
 FROM ilmco/${ARCH}-ubuntu:16.04 as builder
 ARG ARCH
 ARG CLANG_VERSION
-ARG LLDB_VERSION
 ARG SWIFT_VERSION
 ARG SWIFT_BRANCH
 
 ADD qemu-aarch64-static /usr/bin/
 
 ENV CLANG_VERSION=${CLANG_VERSION}
-ENV LLDB_VERSION=${LLDB_VERSION}
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -45,10 +42,12 @@ RUN apt-get update \
       systemtap-sdt-dev \
       uuid-dev \
       wget \
- && rm -r /var/lib/apt/lists/* \
- && rm -r /var/cache/apt/*
+ && find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete \
+ && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-$CLANG_VERSION 100 \
+ && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VERSION 100
 
 WORKDIR /root/build
+COPY ${ARCH} platform
 
 ENV SWIFT_RELEASE=${SWIFT_VERSION}-${SWIFT_BRANCH}
 ENV BRANCH=swift-${SWIFT_RELEASE}
@@ -62,10 +61,8 @@ RUN wget -qO - https://github.com/apple/swift/archive/${BRANCH}.tar.gz | (mkdir 
  && for PKG in swift-corelibs-foundation swift-corelibs-libdispatch swift-corelibs-xctest swift-integration-tests swift-xcode-playground-support; do \
       echo Downloading ${PKG}; \
       wget -qO - https://github.com/apple/${PKG}/archive/${BRANCH}.tar.gz | (mkdir ${PKG}; cd ${PKG}; tar zxf - --strip-components=1); \
-    done
-
-COPY ${ARCH} platform
-RUN [ ! -d platform/patches ] || for PATCH_DIR in platform/patches/*.diffs; do \
+    done \
+ && [ ! -d platform/patches ] || for PATCH_DIR in platform/patches/*.diffs; do \
       TARGET_DIR=`echo $PATCH_DIR | sed -E 's/platform\/patches\/(.*).diffs/\1/'`; \
       for f in $PATCH_DIR/*.diff; do \
         [ ! -d $TARGET_DIR ] || (cd $TARGET_DIR; patch -p1 < ../$f); \
@@ -109,11 +106,9 @@ COPY --from=builder /output/*.tgz /input/
 ARG SWIFT_VERSION
 ARG BUILD_NUMBER
 ARG CLANG_VERSION
-ARG LLDB_VERSION
 
 ENV SWIFT_VERSION=${SWIFT_VERSION} BUILD_NUMBER=${BUILD_NUMBER}
 ENV PACKAGE_VERSION=${SWIFT_VERSION}-${BUILD_NUMBER}
-ENV LLDB_VERSION=${LLDB_VERSION}
 ENV CLANG_VERSION=${CLANG_VERSION}
 
 RUN mkdir -p /output
