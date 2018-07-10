@@ -55,7 +55,7 @@ ENV BRANCH=swift-${SWIFT_RELEASE}
 RUN wget -qO - https://github.com/apple/swift/archive/${BRANCH}.tar.gz | (mkdir swift; cd swift; tar zxf - --strip-components=1) \
  && wget -qO - https://github.com/ninja-build/ninja/archive/v1.8.2.tar.gz | (mkdir ninja; cd ninja; tar zxf - --strip-components=1) \
  && wget -qO - https://github.com/apple/swift-package-manager/archive/${BRANCH}.tar.gz | (mkdir swiftpm; cd swiftpm; tar zxf - --strip-components=1) \
- && for PKG in clang cmark compiler-rt llbuild llvm; do \
+ && for PKG in clang cmark compiler-rt llbuild lldb llvm; do \
       echo Downloading ${PKG}; \
       wget -qO - https://github.com/apple/swift-${PKG}/archive/${BRANCH}.tar.gz | (mkdir ${PKG}; cd ${PKG}; tar zxf - --strip-components=1); \
     done \
@@ -78,7 +78,7 @@ RUN mkdir -p ${INSTALL_DIR}
 RUN ./swift/utils/build-script \
       -R \
       --host-cc=/usr/bin/clang-${CLANG_VERSION} \
-      --host-cpp=/usr/bin/clang++-${CLANG_VERSION} \
+      --host-cxx=/usr/bin/clang++-${CLANG_VERSION} \
       --lldb \
       --llbuild \
       --xctest \
