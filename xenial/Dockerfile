@@ -131,7 +131,8 @@ RUN tar xvf /input/swift-*-RELEASE.tgz --exclude-from=/tmp/runtime-file.list
 RUN fpm -s dir -t deb -n swift4 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
       -d swift4-runtime \
       -d clang-${CLANG_VERSION} \
-      -d python2.7-minimal
+      -d python2.7-minimal \
+      -d libpython2.7 
 
 #
 # Test -- Construct a new image, install packages from stage, test.
