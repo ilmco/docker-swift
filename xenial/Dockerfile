@@ -2,7 +2,7 @@ ARG ARCH
 ARG CLANG_VERSION=6.0
 ARG SWIFT_VERSION=4.1.2
 ARG SWIFT_BRANCH=RELEASE
-ARG BUILD_NUMBER=0
+ARG BUILD_NUMBER
 
 FROM ilmco/${ARCH}-ubuntu:16.04 as builder
 ARG ARCH
@@ -104,7 +104,7 @@ FROM ilmco/${ARCH}-ubuntu-fpm:16.04 as stage
 COPY --from=builder /output/*.tgz /input/
 
 ARG SWIFT_VERSION
-ARG BUILD_NUMBER
+ARG BUILD_NUMBER=0
 ARG CLANG_VERSION
 
 ENV SWIFT_VERSION=${SWIFT_VERSION} BUILD_NUMBER=${BUILD_NUMBER}
@@ -132,7 +132,7 @@ RUN fpm -s dir -t deb -n swift4 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
       -d swift4-runtime \
       -d clang-${CLANG_VERSION} \
       -d python2.7-minimal \
-      -d libpython2.7 
+      -d libpython2.7
 
 #
 # Test -- Construct a new image, install packages from stage, test.
