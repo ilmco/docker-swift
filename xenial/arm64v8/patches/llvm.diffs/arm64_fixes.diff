@@ -10,12 +10,12 @@
 -               << " Value: 0x" << format("%llx", Value) << " Type: 0x"
 -               << format("%x", Type) << " Addend: 0x" << format("%llx", Addend)
 -               << "\n");
-+  LLVM_DEBUG(dbgs() << "resolveAArch64Relocation, LocalAddress: 0x"
-+                    << format("%llx", Section.getAddressWithOffset(Offset))
-+                    << " FinalAddress: 0x" << format("%llx", FinalAddress)
-+                    << " Value: 0x" << format("%llx", Value) << " Type: 0x"
-+                    << format("%x", Type) << " Addend: 0x"
-+                    << format("%llx", Addend) << "\n");
++  DEBUG(dbgs() << "resolveAArch64Relocation, LocalAddress: 0x"
++               << format("%llx", Section.getAddressWithOffset(Offset))
++               << " FinalAddress: 0x" << format("%llx", FinalAddress)
++               << " Value: 0x" << format("%llx", Value) << " Type: 0x"
++               << format("%x", Type) << " Addend: 0x"
++               << format("%llx", Addend) << "\n");
 
    switch (Type) {
    default:
