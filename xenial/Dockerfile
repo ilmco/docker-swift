@@ -118,17 +118,23 @@ WORKDIR /tmp/root-runtime
 RUN tar xvf /input/swift-*-RELEASE.tgz --wildcards 'usr/lib/swift/linux/*.so'
 RUN find . -name '*.so' -exec chmod +x {} \;
 RUN fpm -s dir -t deb -n swift4-runtime -v ${PACKAGE_VERSION} -p /output -C `pwd` \
-      -d libicu55 \
-      -d libcurl3 \
-      -d libxml2 \
-      -d libstdc++6 \
-      -d libatomic1
+      libatomic1 \
+      libbsd0 \
+      libc6 \
+      libcurl3 \
+      libgcc1 \
+      libicu55 \
+      libstdc++6 \
+      libxml2
 RUN find . -type f | cut -c 3- > /tmp/runtime-file.list
 
 # Swift4
 WORKDIR /tmp/root
 RUN tar xvf /input/swift-*-RELEASE.tgz --exclude-from=/tmp/runtime-file.list
 RUN fpm -s dir -t deb -n swift4 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
+      -d libc6 \
+      -d libgcc1 \
+      -d libstdc++6 \
       -d swift4-runtime \
       -d clang-${CLANG_VERSION} \
       -d python2.7-minimal \
