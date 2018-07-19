@@ -104,7 +104,7 @@ FROM ilmco/${ARCH}-ubuntu-fpm:16.04 as stage
 COPY --from=builder /output/*.tgz /input/
 
 ARG SWIFT_VERSION
-ARG BUILD_NUMBER=0
+ARG BUILD_NUMBER=2
 ARG CLANG_VERSION
 
 ENV SWIFT_VERSION=${SWIFT_VERSION} BUILD_NUMBER=${BUILD_NUMBER}
@@ -118,19 +118,21 @@ WORKDIR /tmp/root-runtime
 RUN tar xvf /input/swift-*-RELEASE.tgz --wildcards 'usr/lib/swift/linux/*.so'
 RUN find . -name '*.so' -exec chmod +x {} \;
 RUN fpm -s dir -t deb -n swift4-runtime -v ${PACKAGE_VERSION} -p /output -C `pwd` \
-      libatomic1 \
-      libbsd0 \
-      libc6 \
-      libcurl3 \
-      libgcc1 \
-      libicu55 \
-      libstdc++6 \
-      libxml2
+      -d libatomic1 \
+      -d libbsd0 \
+      -d libc6 \
+      -d libcurl3 \
+      -d libgcc1 \
+      -d libicu55 \
+      -d libstdc++6 \
+      -d libxml2 \
+      -d zlib1g
 RUN find . -type f | cut -c 3- > /tmp/runtime-file.list
 
 # Swift4
 WORKDIR /tmp/root
 RUN tar xvf /input/swift-*-RELEASE.tgz --exclude-from=/tmp/runtime-file.list
+RUN find . -name '*.so' -exec chmod +x {} \;
 RUN fpm -s dir -t deb -n swift4 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
       -d libc6 \
       -d libgcc1 \
