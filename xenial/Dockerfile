@@ -69,33 +69,15 @@ RUN wget -qO - https://github.com/apple/swift/archive/${BRANCH}.tar.gz | (mkdir 
       done; \
     done;
 
-ENV INSTALL_DIR=/output/root
+ENV WORKSPACE=/output/root
 ENV PACKAGE=/output/${BRANCH}.tgz
-RUN mkdir -p ${INSTALL_DIR}
+RUN mkdir -p ${WORKSPACE}
 RUN ./swift/utils/build-script \
-      -R \
+      --preset=buildbot,tools=R,stdlib=RD \
       --host-cc=/usr/bin/clang-${CLANG_VERSION} \
       --host-cxx=/usr/bin/clang++-${CLANG_VERSION} \
-      --lldb \
-      --llbuild \
-      --xctest \
-      --swiftpm \
-      --foundation \
-      --libdispatch \
-      -- \
-      --install-libdispatch \
-      --install-foundation \
-      --install-swift \
-      --install-lldb \
-      --install-llbuild \
-      --install-xctest \
-      --install-swiftpm \
-      --install-prefix=/usr \
-      --swift-install-components='autolink-driver;compiler;clang-builtin-headers;stdlib;swift-remote-mirror;sdk-overlay;dev' \
-      --build-swift-static-stdlib \
-      --build-swift-static-sdk-overlay \
-      --install-destdir=${INSTALL_DIR} \
-      --installable-package=${PACKAGE}
+      install_destdir="${WORKSPACE}/install" \
+      installable_package="${PACKAGE}"
 
 #
 # Stage -- Make debian packages
