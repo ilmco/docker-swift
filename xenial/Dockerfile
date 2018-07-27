@@ -73,9 +73,8 @@ ENV WORKSPACE=/output/root
 ENV PACKAGE=/output/${BRANCH}.tgz
 RUN mkdir -p ${WORKSPACE}
 RUN ./swift/utils/build-script \
+      -j $(grep -c ^processor /proc/cpuinfo) \
       --preset=buildbot,tools=R,stdlib=RD \
-      --host-cc=/usr/bin/clang-${CLANG_VERSION} \
-      --host-cxx=/usr/bin/clang++-${CLANG_VERSION} \
       install_destdir="${WORKSPACE}/install" \
       installable_package="${PACKAGE}"
 
