@@ -74,9 +74,9 @@ ENV PACKAGE=/output/${BRANCH}.tgz
 RUN mkdir -p ${WORKSPACE}
 RUN ./swift/utils/build-script \
       -j $(grep -c ^processor /proc/cpuinfo) \
-      --preset=buildbot,tools=R,stdlib=RD \
+      --preset=buildbot_linux,no_test \
       install_destdir="${WORKSPACE}/install" \
-      installable_package="${PACKAGE}"
+      installable_package="${PACKAGE}" 
 
 #
 # Stage -- Make debian packages
