@@ -1,10 +1,11 @@
-ARG ARCH
-ARG CLANG_VERSION=6.0
+ARG ARCH=arm64v8
+ARG DISTRO=cosmic
+ARG CLANG_VERSION=7
 ARG SWIFT_VERSION=5.0.1
 ARG SWIFT_BRANCH=RELEASE
 ARG BUILD_NUMBER
 
-FROM ${ARCH}/ubuntu:xenial as builder
+FROM ${ARCH}/ubuntu:${DISTRO} as buildbox
 ARG ARCH
 ARG CLANG_VERSION
 ARG SWIFT_VERSION
@@ -24,7 +25,6 @@ RUN apt-get update \
       icu-devtools \
       libblocksruntime-dev \
       libbsd-dev \
-      libcurl4-openssl-dev \
       libcurl4-openssl-dev \
       libedit-dev \
       libncurses5-dev \
@@ -81,7 +81,7 @@ RUN ./swift/utils/build-script \
 # Stage -- Make debian packages
 #
 FROM ilmco/${ARCH}-ubuntu-fpm:16.04 as stage
-COPY --from=builder /output/*.tgz /input/
+COPY --from=buildbox /output/*.tgz /input/
 
 ARG SWIFT_VERSION
 ARG BUILD_NUMBER=0
@@ -93,38 +93,34 @@ ENV CLANG_VERSION=${CLANG_VERSION}
 
 RUN mkdir -p /output
 
-# Swift4 Runtime
+# Swift Runtime
 WORKDIR /tmp/root-runtime
 RUN tar xvf /input/swift-*-RELEASE.tgz --wildcards 'usr/lib/swift/linux/*.so'
 RUN find . -name '*.so' -exec chmod +x {} \;
-RUN fpm -s dir -t deb -n swift5-runtime -v ${PACKAGE_VERSION} -p /output -C `pwd` \
-      -d libatomic1 \
-      -d libbsd0 \
-      -d libc6 \
-      -d libcurl3 \
-      -d libgcc1 \
-      -d libstdc++6 \
-      -d libxml2 \
-      -d zlib1g
+RUN for file in $(find . -executable -type f); do dpkg -S $(objdump -p $file | grep NEEDED | awk '{print $2}') 2> /dev/null | sed 's/:.*//g'; done | sort | uniq | sed 's/^/-d /g' > /tmp/runtime.dependencies
+RUN cat /tmp/runtime.dependencies
+RUN fpm -s dir -t deb --deb-no-default-config-files -n swift5-runtime -v ${PACKAGE_VERSION} -p /output -C `pwd` \
+      $(cat /tmp/runtime.dependencies)
 RUN find . -type f | cut -c 3- > /tmp/runtime-file.list
 
-# Swift4
+# Swift
 WORKDIR /tmp/root
 RUN tar xvf /input/swift-*-RELEASE.tgz --exclude-from=/tmp/runtime-file.list
 RUN find . -name '*.so' -exec chmod +x {} \;
-RUN fpm -s dir -t deb -n swift5 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
-      -d libc6 \
-      -d libgcc1 \
-      -d libstdc++6 \
+RUN for file in $(find . -executable -type f); do dpkg -S $(objdump -p $file | grep NEEDED | awk '{print $2}') 2> /dev/null | sed 's/:.*//g'; done | sort | uniq | sed 's/^/-d /g' > /tmp/swift.dependencies
+RUN cat /tmp/swift.dependencies
+RUN fpm -s dir -t deb --deb-no-default-config-files -n swift5 -v ${PACKAGE_VERSION} -p /output -C `pwd` \
       -d swift5-runtime \
       -d clang-${CLANG_VERSION} \
-      -d python3-minimal \
-      -d libpython3.5
+      -d libtinfo6 \
+      -d libpython3.6 \
+      -d libxml2 \
+      $(cat /tmp/swift.dependencies)
 
 #
 # Test -- Construct a new image, install packages from stage, test.
 #
-FROM ilmco/${ARCH}-ubuntu:16.04 as test
+FROM ${ARCH}/ubuntu:${DISTRO} as testbox
 COPY qemu-aarch64-static /usr/bin
 
 VOLUME /pkgs
